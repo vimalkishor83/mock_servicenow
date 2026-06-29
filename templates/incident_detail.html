@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}{{ incident.number }} — Mock ServiceNow{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+  <a href="/ui/incidents" class="btn btn-sm btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+  <h4 class="mb-0 ms-1">
+    <i class="bi bi-ticket-detailed me-2 text-primary"></i>{{ incident.number }}
+  </h4>
+  <span class="badge snow-state-{{ incident.state | replace(' ','') }} ms-1">{{ incident.state }}</span>
+  <span class="badge snow-pri-{{ incident.priority }}">P{{ incident.priority }}</span>
+  <div class="ms-auto d-flex gap-2">
+    <button class="btn btn-sm btn-outline-secondary" onclick="copyNumber()">
+      <i class="bi bi-clipboard me-1"></i><span id="copyNumLabel">Copy Number</span>
+    </button>
+    <a href="/api/now/table/incident/{{ incident.sys_id }}" target="_blank" class="btn btn-sm btn-outline-primary">
+      <i class="bi bi-braces me-1"></i>API
+    </a>
+  </div>
+</div>
+
+<!-- Timeline strip -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-2 px-3">
+    <div class="d-flex flex-wrap gap-4 align-items-center small">
+      <div>
+        <span class="text-muted me-1"><i class="bi bi-calendar-plus"></i> Opened:</span>
+        <span class="fw-semibold">{{ incident.opened_at[:16] | replace('T',' ') if incident.opened_at else '—' }}</span>
+        {% if incident.opened_by %}<span class="text-muted ms-1">by {{ incident.opened_by }}</span>{% endif %}
+      </div>
+      {% if incident.resolved_at %}
+      <div class="text-success">
+        <span class="me-1"><i class="bi bi-calendar-check"></i> Resolved:</span>
+        <span class="fw-semibold">{{ incident.resolved_at[:16] | replace('T',' ') }}</span>
+        {% if incident.resolved_by %}<span class="ms-1">by {{ incident.resolved_by }}</span>{% endif %}
+      </div>
+      {% endif %}
+      {% if incident.assigned_to %}
+      <div>
+        <span class="text-muted me-1"><i class="bi bi-person-check"></i> Assigned to:</span>
+        <span class="fw-semibold">{{ incident.assigned_to }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <!-- Left: main details -->
+  <div class="col-lg-8">
+
+    <!-- Summary card -->
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom fw-semibold">
+        <i class="bi bi-info-circle me-1 text-primary"></i>Summary
+      </div>
+      <div class="card-body">
+        <h5 class="mb-3">{{ incident.short_description }}</h5>
+        <div class="row g-2 small text-muted mb-3">
+          <div class="col-6 col-md-3">
+            <span class="d-block fw-semibold text-dark">Category</span>{{ incident.category or '—' }}
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="d-block fw-semibold text-dark">Subcategory</span>{{ incident.subcategory or '—' }}
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="d-block fw-semibold text-dark">Assignment Group</span>{{ incident.assignment_group or '—' }}
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="d-block fw-semibold text-dark">Caller</span>{{ incident.caller_id or '—' }}
+          </div>
+        </div>
+
+        {% if incident.description %}
+        <div class="mb-0">
+          <div class="fw-semibold small text-dark mb-1">Full Description</div>
+          <pre class="snow-pre">{{ incident.description }}</pre>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Comments -->
+    {% if incident.comments %}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom fw-semibold">
+        <i class="bi bi-chat-left-text me-1 text-info"></i>Comments
+      </div>
+      <div class="card-body">
+        <pre class="snow-pre">{{ incident.comments }}</pre>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Root cause & resolution -->
+    {% if incident.work_notes or incident.close_notes %}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom fw-semibold">
+        <i class="bi bi-wrench me-1 text-warning"></i>Resolution Details
+      </div>
+      <div class="card-body">
+        {% if incident.work_notes %}
+        <div class="mb-3">
+          <div class="fw-semibold small text-dark mb-1">Work Notes / Root Cause</div>
+          <pre class="snow-pre">{{ incident.work_notes }}</pre>
+        </div>
+        {% endif %}
+        {% if incident.close_notes %}
+        <div class="mb-0">
+          <div class="fw-semibold small text-dark mb-1">Close Notes / Resolution</div>
+          <pre class="snow-pre">{{ incident.close_notes }}</pre>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <!-- Right: metadata -->
+  <div class="col-lg-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-transparent border-bottom fw-semibold">
+        <i class="bi bi-card-list me-1 text-primary"></i>Details
+      </div>
+      <div class="card-body">
+        <dl class="row small mb-0">
+          <dt class="col-5 text-muted">Number</dt>
+          <dd class="col-7 fw-semibold">{{ incident.number }}</dd>
+
+          <dt class="col-5 text-muted">State</dt>
+          <dd class="col-7">
+            <span class="badge snow-state-{{ incident.state | replace(' ','') }}">{{ incident.state }}</span>
+          </dd>
+
+          <dt class="col-5 text-muted">Priority</dt>
+          <dd class="col-7">
+            <span class="badge snow-pri-{{ incident.priority }}">P{{ incident.priority }}</span>
+          </dd>
+
+          <dt class="col-5 text-muted">Urgency</dt>
+          <dd class="col-7">{{ incident.urgency or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Impact</dt>
+          <dd class="col-7">{{ incident.impact or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Category</dt>
+          <dd class="col-7">{{ incident.category or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Subcategory</dt>
+          <dd class="col-7">{{ incident.subcategory or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Group</dt>
+          <dd class="col-7">{{ incident.assignment_group or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Assigned to</dt>
+          <dd class="col-7">{{ incident.assigned_to or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Caller</dt>
+          <dd class="col-7">{{ incident.caller_id or '—' }}</dd>
+
+          <dt class="col-5 text-muted">Opened</dt>
+          <dd class="col-7">{{ incident.opened_at[:10] if incident.opened_at else '—' }}</dd>
+
+          {% if incident.resolved_at %}
+          <dt class="col-5 text-muted">Resolved</dt>
+          <dd class="col-7">{{ incident.resolved_at[:10] }}</dd>
+          {% endif %}
+
+          {% if incident.sys_id %}
+          <dt class="col-5 text-muted">Sys ID</dt>
+          <dd class="col-7 text-break" style="font-size:.7rem">{{ incident.sys_id }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+    </div>
+
+    <!-- JSON view -->
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-braces me-1 text-secondary"></i>Raw API Response</span>
+        <button class="btn btn-xs btn-outline-secondary py-0 px-2" onclick="copyJson()">
+          <i class="bi bi-clipboard"></i> <span id="copyJsonLabel">Copy</span>
+        </button>
+      </div>
+      <div class="card-body p-2">
+        <pre class="snow-pre snow-json mb-0" id="jsonBlock">{{ incident | tojson(indent=2) }}</pre>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyJson() {
+  navigator.clipboard.writeText(document.getElementById("jsonBlock").textContent).then(() => {
+    const lbl = document.getElementById("copyJsonLabel");
+    lbl.textContent = "Copied!";
+    setTimeout(() => lbl.textContent = "Copy", 1500);
+  });
+}
+function copyNumber() {
+  navigator.clipboard.writeText("{{ incident.number }}").then(() => {
+    const lbl = document.getElementById("copyNumLabel");
+    lbl.textContent = "Copied!";
+    setTimeout(() => lbl.textContent = "Copy Number", 1500);
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Incidents — Mock ServiceNow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0"><i class="bi bi-ticket-detailed me-2 text-primary"></i>Incidents</h4>
+  <span class="text-muted small">{{ total }} records</span>
+</div>
+
+<!-- Search / Filter bar -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-2">
+    <form method="get" action="/ui/incidents" class="row g-2 align-items-end">
+      <div class="col-12 col-md-4">
+        <label class="form-label small mb-1">Search</label>
+        <div class="input-group input-group-sm">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="text" class="form-control" name="q" value="{{ q }}" placeholder="Number, description…">
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">State</label>
+        <select class="form-select form-select-sm" name="state">
+          <option value="">All states</option>
+          {% for s in states %}
+          <option value="{{ s }}" {% if state == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small mb-1">Priority</label>
+        <select class="form-select form-select-sm" name="priority">
+          <option value="">All priorities</option>
+          {% for p in priorities %}
+          <option value="{{ p }}" {% if priority == p|string %}selected{% endif %}>P{{ p }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <label class="form-label small mb-1">Assignment Group</label>
+        <select class="form-select form-select-sm" name="group">
+          <option value="">All groups</option>
+          {% for g in groups %}
+          <option value="{{ g }}" {% if group == g %}selected{% endif %}>{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-auto d-flex gap-2">
+        <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-filter me-1"></i>Filter</button>
+        <a href="/ui/incidents" class="btn btn-outline-secondary btn-sm">Clear</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Active filter chips -->
+{% if q or state or priority or group %}
+<div class="d-flex flex-wrap gap-2 mb-3">
+  <span class="text-muted small align-self-center">Active filters:</span>
+  {% if q %}
+  <a href="?{{ query_string | replace('q=' + q, '') }}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none snow-chip">
+    Search: {{ q }} <i class="bi bi-x ms-1"></i>
+  </a>
+  {% endif %}
+  {% if state %}
+  <a href="?{{ query_string | replace('state=' + state, '') }}" class="badge bg-secondary-subtle text-secondary border border-secondary-subtle text-decoration-none snow-chip">
+    State: {{ state }} <i class="bi bi-x ms-1"></i>
+  </a>
+  {% endif %}
+  {% if priority %}
+  <a href="?{{ query_string | replace('priority=' + priority, '') }}" class="badge bg-warning-subtle text-warning border border-warning-subtle text-decoration-none snow-chip">
+    Priority: P{{ priority }} <i class="bi bi-x ms-1"></i>
+  </a>
+  {% endif %}
+  {% if group %}
+  <a href="?{{ query_string | replace('group=' + group, '') }}" class="badge bg-info-subtle text-info border border-info-subtle text-decoration-none snow-chip">
+    Group: {{ group }} <i class="bi bi-x ms-1"></i>
+  </a>
+  {% endif %}
+  <a href="/ui/incidents" class="badge bg-light text-secondary border text-decoration-none snow-chip ms-1">
+    Clear all <i class="bi bi-x ms-1"></i>
+  </a>
+</div>
+{% endif %}
+
+<!-- Results table -->
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Number</th>
+          <th>State</th>
+          <th>Priority</th>
+          <th>Category</th>
+          <th>Group</th>
+          <th>Description</th>
+          <th class="text-nowrap">Opened</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inc in incidents %}
+        <tr class="incident-row snow-pri-row-{{ inc.priority }}" style="cursor:pointer" data-href="/ui/incidents/{{ inc.number }}">
+          <td class="fw-semibold text-nowrap text-primary">{{ inc.number }}</td>
+          <td><span class="badge snow-state-{{ inc.state | replace(' ','') }}">{{ inc.state }}</span></td>
+          <td><span class="badge snow-pri-{{ inc.priority }}">P{{ inc.priority }}</span></td>
+          <td class="text-nowrap small">{{ inc.category or '—' }}</td>
+          <td class="text-nowrap small">{{ inc.assignment_group or '—' }}</td>
+          <td class="text-truncate" style="max-width:300px">{{ inc.short_description }}</td>
+          <td class="text-nowrap text-muted small">{{ inc.opened_at[:10] if inc.opened_at else '—' }}</td>
+          <td class="text-nowrap">
+            <a href="/ui/incidents/{{ inc.number }}" class="btn btn-xs btn-outline-primary py-0 px-2">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>No incidents match your filters.
+            <div class="mt-2"><a href="/ui/incidents" class="btn btn-sm btn-outline-secondary">Clear filters</a></div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if pages > 1 %}
+  <div class="card-footer bg-transparent d-flex align-items-center justify-content-between">
+    <span class="text-muted small">Page {{ page }} of {{ pages }} ({{ total }} records)</span>
+    <nav>
+      <ul class="pagination pagination-sm mb-0">
+        {% if page > 1 %}
+        <li class="page-item"><a class="page-link" href="?{{ query_string }}&page=1">«</a></li>
+        <li class="page-item"><a class="page-link" href="?{{ query_string }}&page={{ page - 1 }}">‹ Prev</a></li>
+        {% endif %}
+        {% for p in range([1, page-2]|max, [pages+1, page+3]|min) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="?{{ query_string }}&page={{ p }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        {% if page < pages %}
+        <li class="page-item"><a class="page-link" href="?{{ query_string }}&page={{ page + 1 }}">Next ›</a></li>
+        <li class="page-item"><a class="page-link" href="?{{ query_string }}&page={{ pages }}">»</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll(".incident-row").forEach(row => {
+  row.addEventListener("click", e => {
+    if (!e.target.closest("a,button")) window.location = row.dataset.href;
+  });
+});
+</script>
+{% endblock %}

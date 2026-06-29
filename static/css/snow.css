@@ -1,0 +1,129 @@
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+body {
+  background: #f0f2f5;
+  font-size: .9rem;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────── */
+.snow-nav {
+  background: #172b4d;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
+}
+.snow-nav .nav-link { color: rgba(255,255,255,.75) !important; transition: color .15s; }
+.snow-nav .nav-link:hover,
+.snow-nav .nav-link.active { color: #fff !important; }
+.snow-nav .nav-link.active { border-bottom: 2px solid #3b82f6; padding-bottom: calc(.5rem - 2px); }
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+.snow-footer {
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  padding: .6rem 0;
+  font-size: .8rem;
+  color: #64748b;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card { border-radius: 10px; }
+.card-header { border-radius: 10px 10px 0 0 !important; font-size: .85rem; }
+
+.kb-card { transition: box-shadow .15s, transform .15s; }
+.kb-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.13) !important; transform: translateY(-2px); }
+
+.kb-list-item { transition: background .12s; }
+.kb-list-item:hover { background: #f0fdf4; }
+
+/* ── Metric cards ───────────────────────────────────────────────────────── */
+.snow-metric-card { transition: box-shadow .15s, transform .15s; }
+.snow-metric-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.12) !important; transform: translateY(-2px); }
+
+.snow-metric-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ── State breakdown pills ───────────────────────────────────────────────── */
+.snow-state-pill { font-size: .82rem; }
+
+/* ── State badges ───────────────────────────────────────────────────────── */
+.snow-state-New             { background:#3b82f6; color:#fff; }
+.snow-state-InProgress      { background:#8b5cf6; color:#fff; }
+.snow-state-OnHold          { background:#f59e0b; color:#fff; }
+.snow-state-Resolved        { background:#10b981; color:#fff; }
+.snow-state-Closed          { background:#6b7280; color:#fff; }
+.snow-state-Cancelled       { background:#ef4444; color:#fff; }
+
+/* ── Priority badges ────────────────────────────────────────────────────── */
+.snow-pri-1 { background:#7f1d1d; color:#fff; }
+.snow-pri-2 { background:#dc2626; color:#fff; }
+.snow-pri-3 { background:#d97706; color:#fff; }
+.snow-pri-4 { background:#2563eb; color:#fff; }
+.snow-pri-5 { background:#6b7280; color:#fff; }
+
+/* ── Priority row tinting ────────────────────────────────────────────────── */
+.snow-pri-row-1 { border-left: 3px solid #7f1d1d; }
+.snow-pri-row-2 { border-left: 3px solid #dc2626; }
+.snow-pri-row-3 { border-left: 3px solid #d97706; }
+.snow-pri-row-4 { border-left: 3px solid #2563eb; }
+.snow-pri-row-5 { border-left: 3px solid #e2e8f0; }
+
+/* ── Bar chart ──────────────────────────────────────────────────────────── */
+.snow-bar {
+  width: 100%;
+  min-height: 4px;
+  background: linear-gradient(180deg, #60a5fa, #1d4ed8);
+  border-radius: 4px 4px 0 0;
+  transition: height .3s;
+  cursor: default;
+}
+.snow-bar:hover { background: linear-gradient(180deg, #3b82f6, #1e3a8a); }
+
+/* ── Pre / code blocks ──────────────────────────────────────────────────── */
+.snow-pre {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-size: .8rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.snow-kb-body {
+  max-height: none;
+  font-family: inherit;
+  font-size: .88rem;
+}
+
+.snow-json {
+  font-family: "Consolas", "Cascadia Code", monospace;
+  font-size: .75rem;
+  max-height: 380px;
+}
+
+/* ── Table rows ─────────────────────────────────────────────────────────── */
+.incident-row:hover { background: #f0f7ff; }
+
+/* ── Filter chips ───────────────────────────────────────────────────────── */
+.snow-chip { font-size: .78rem; border-radius: 20px !important; padding: .3em .7em !important; }
+.snow-chip:hover { opacity: .85; }
+
+/* ── Tiny button ────────────────────────────────────────────────────────── */
+.btn-xs { font-size: .78rem; }
+
+/* ── Success subtle (Bootstrap 5.3 back-compat) ─────────────────────────── */
+.bg-success-subtle { background-color: #d1fae5 !important; }
+.bg-primary-subtle { background-color: #dbeafe !important; }
+.bg-warning-subtle { background-color: #fef3c7 !important; }
+.bg-danger-subtle  { background-color: #fee2e2 !important; }
+.bg-info-subtle    { background-color: #e0f2fe !important; }
+.bg-secondary-subtle { background-color: #f1f5f9 !important; }

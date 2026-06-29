@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Mock ServiceNow{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>Dashboard</h4>
+  <span class="text-muted small"><i class="bi bi-arrow-clockwise me-1"></i>Enterprise activity simulator</span>
+</div>
+
+<!-- Metric cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card h-100 border-0 shadow-sm snow-metric-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="snow-metric-icon bg-primary-subtle text-primary me-2"><i class="bi bi-ticket-detailed"></i></div>
+          <span class="text-muted small">Total Incidents</span>
+        </div>
+        <div class="fs-2 fw-bold text-primary">{{ summary.total }}</div>
+        <a href="/ui/incidents" class="stretched-link small text-muted">View all →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card h-100 border-0 shadow-sm snow-metric-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="snow-metric-icon bg-warning-subtle text-warning me-2"><i class="bi bi-hourglass-split"></i></div>
+          <span class="text-muted small">Open</span>
+        </div>
+        <div class="fs-2 fw-bold text-warning">{{ summary.open }}</div>
+        <a href="/ui/incidents?state=New" class="stretched-link small text-muted">View open →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card h-100 border-0 shadow-sm snow-metric-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="snow-metric-icon bg-success-subtle text-success me-2"><i class="bi bi-check-circle"></i></div>
+          <span class="text-muted small">Resolved</span>
+        </div>
+        <div class="fs-2 fw-bold text-success">{{ summary.resolved }}</div>
+        <a href="/ui/incidents?state=Resolved" class="stretched-link small text-muted">View resolved →</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card h-100 border-0 shadow-sm snow-metric-card">
+      <div class="card-body">
+        <div class="d-flex align-items-center mb-2">
+          <div class="snow-metric-icon bg-danger-subtle text-danger me-2"><i class="bi bi-exclamation-triangle"></i></div>
+          <span class="text-muted small">Critical (P1)</span>
+        </div>
+        <div class="fs-2 fw-bold text-danger">{{ summary.critical }}</div>
+        <a href="/ui/incidents?priority=1" class="stretched-link small text-muted">View critical →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- State breakdown strip -->
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body py-2 px-3">
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+      <span class="text-muted small fw-semibold me-1">By State:</span>
+      {% for state, count in summary.by_state.items() %}
+      <a href="/ui/incidents?state={{ state }}" class="text-decoration-none snow-state-pill snow-state-{{ state | replace(' ','') }}">
+        <span class="badge me-1 snow-state-{{ state | replace(' ','') }}">{{ count }}</span>
+        <span class="text-dark small">{{ state }}</span>
+      </a>
+      {% endfor %}
+      <div class="vr d-none d-md-block"></div>
+      <span class="text-muted small fw-semibold me-1">By Priority:</span>
+      {% for p in [1,2,3,4,5] %}
+      <a href="/ui/incidents?priority={{ p }}" class="text-decoration-none">
+        <span class="badge snow-pri-{{ p }} me-1">P{{ p }}</span>
+        <span class="text-dark small">{{ summary.by_priority[p] }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Trend bar chart -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-bar-chart me-1 text-primary"></i>Incident Trend (last 7 days)</span>
+        {% set trend_total = summary.trend | map(attribute='count') | sum %}
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ trend_total }} this week</span>
+      </div>
+      <div class="card-body px-3 pb-2" style="height:220px">
+        {% set max_count = [summary.trend | map(attribute='count') | max, 1] | max %}
+        <div class="d-flex align-items-end gap-2 h-100 pt-3">
+          {% for point in summary.trend %}
+          <div class="d-flex flex-column align-items-center flex-fill" style="height:100%">
+            <span class="text-muted fw-semibold" style="font-size:.72rem">{{ point.count }}</span>
+            <div class="snow-bar rounded-top flex-shrink-0"
+                 style="height:{{ [point.count / max_count * 130, 4] | max | round | int }}px; width:100%"
+                 data-bs-toggle="tooltip" title="{{ point.date }}: {{ point.count }} incidents"></div>
+            <span class="text-muted mt-1" style="font-size:.68rem">{{ point.date[5:] }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KB articles mini list -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-journal-richtext me-1 text-success"></i>Knowledge Base</span>
+        <a href="/ui/kb" class="btn btn-sm btn-outline-success py-0">View All ({{ kb_count }})</a>
+      </div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for art in kb_articles %}
+          <li class="list-group-item px-3 py-2 kb-list-item" onclick="window.location='/ui/kb/{{ art.sys_id }}'" style="cursor:pointer">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-fill me-2" style="min-width:0">
+                <div class="fw-semibold small text-truncate">{{ art.short_description }}</div>
+                <div class="text-muted" style="font-size:.72rem">
+                  <span class="badge bg-success-subtle text-success border border-success-subtle me-1">{{ art.category or 'General' }}</span>
+                  {{ art.assignment_group or '' }}
+                </div>
+              </div>
+              <span class="text-muted flex-shrink-0" style="font-size:.7rem;white-space:nowrap">
+                <i class="bi bi-eye"></i> {{ art.view_count }}
+              </span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Latest incidents table -->
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-clock-history me-1 text-primary"></i>Latest Incidents</span>
+    <a href="/ui/incidents" class="btn btn-sm btn-primary">View All</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Number</th>
+          <th>State</th>
+          <th>Priority</th>
+          <th>Group</th>
+          <th>Description</th>
+          <th class="text-nowrap">Opened</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inc in summary.latest %}
+        <tr class="incident-row snow-pri-row-{{ inc.priority }}" style="cursor:pointer" data-href="/ui/incidents/{{ inc.number }}">
+          <td class="fw-semibold text-nowrap text-primary">{{ inc.number }}</td>
+          <td><span class="badge snow-state-{{ inc.state | replace(' ','') }}">{{ inc.state }}</span></td>
+          <td><span class="badge snow-pri-{{ inc.priority }}">P{{ inc.priority }}</span></td>
+          <td class="text-nowrap small">{{ inc.assignment_group or '—' }}</td>
+          <td class="text-truncate" style="max-width:280px">{{ inc.short_description }}</td>
+          <td class="text-nowrap text-muted small">{{ inc.opened_at[:10] if inc.opened_at else '—' }}</td>
+          <td><a href="/ui/incidents/{{ inc.number }}" class="btn btn-xs btn-outline-secondary py-0 px-2">Detail</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll(".incident-row").forEach(row => {
+  row.addEventListener("click", e => {
+    if (!e.target.closest("a,button")) window.location = row.dataset.href;
+  });
+});
+// Bootstrap tooltips
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+  new bootstrap.Tooltip(el, { trigger: "hover" });
+});
+</script>
+{% endblock %}
