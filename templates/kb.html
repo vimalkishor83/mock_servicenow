@@ -10,7 +10,7 @@
 <!-- Search / Filter bar -->
 <div class="card border-0 shadow-sm mb-3">
   <div class="card-body py-2">
-    <form method="get" action="/ui/kb" class="row g-2 align-items-end">
+    <form method="get" action="{{ request.script_root }}/ui/kb" class="row g-2 align-items-end">
       <div class="col-12 col-md-5">
         <label class="form-label small mb-1">Search</label>
         <div class="input-group input-group-sm">
@@ -74,7 +74,7 @@
 <div class="row g-3">
   {% for art in articles %}
   <div class="col-md-6 col-xl-4">
-    <div class="card h-100 border-0 shadow-sm kb-card" onclick="window.location='/ui/kb/{{ art.sys_id }}'" style="cursor:pointer">
+    <div class="card h-100 border-0 shadow-sm kb-card">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-start mb-2">
           <span class="badge bg-success-subtle text-success border border-success-subtle">{{ art.category or 'General' }}</span>
