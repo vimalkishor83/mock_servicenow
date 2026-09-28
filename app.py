@@ -5,7 +5,7 @@ import time
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from flask import Flask, g, request
+from flask import Flask, g, request, send_from_directory
 
 import config
 from models.db_models import Incident, db
@@ -20,6 +20,9 @@ from swagger.swagger_config import register_swagger
 
 def create_app(start_background_jobs=True):
     app = Flask(__name__)
+    # Behind a reverse proxy under a path prefix (Caddy sets X-Forwarded-Prefix). No effect when served at root.
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
     app.config.from_object(config)
     configure_logging(app)
 
@@ -34,6 +37,15 @@ def create_app(start_background_jobs=True):
     app.register_blueprint(user_blueprint)
     register_swagger(app)
     register_request_logging(app)
+
+    # Shared, pre-built library files (Bootstrap), bind-mounted read-only at
+    # /common-static from the host's /home/claudedev/office/common-static --
+    # one copy shared across office apps instead of each app vendoring its own.
+    common_static_dir = os.environ.get("COMMON_STATIC_DIR", "/common-static")
+
+    @app.route("/common-static/<path:filename>")
+    def common_static(filename):
+        return send_from_directory(common_static_dir, filename)
 
     with app.app_context():
         db.create_all()

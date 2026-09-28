@@ -17,7 +17,7 @@
           <span class="text-muted small">Total Incidents</span>
         </div>
         <div class="fs-2 fw-bold text-primary">{{ summary.total }}</div>
-        <a href="/ui/incidents" class="stretched-link small text-muted">View all →</a>
+        <a href="{{ request.script_root }}/ui/incidents" class="stretched-link small text-muted">View all →</a>
       </div>
     </div>
   </div>
@@ -29,7 +29,7 @@
           <span class="text-muted small">Open</span>
         </div>
         <div class="fs-2 fw-bold text-warning">{{ summary.open }}</div>
-        <a href="/ui/incidents?state=New" class="stretched-link small text-muted">View open →</a>
+        <a href="{{ request.script_root }}/ui/incidents?state=New" class="stretched-link small text-muted">View open →</a>
       </div>
     </div>
   </div>
@@ -41,7 +41,7 @@
           <span class="text-muted small">Resolved</span>
         </div>
         <div class="fs-2 fw-bold text-success">{{ summary.resolved }}</div>
-        <a href="/ui/incidents?state=Resolved" class="stretched-link small text-muted">View resolved →</a>
+        <a href="{{ request.script_root }}/ui/incidents?state=Resolved" class="stretched-link small text-muted">View resolved →</a>
       </div>
     </div>
   </div>
@@ -53,7 +53,7 @@
           <span class="text-muted small">Critical (P1)</span>
         </div>
         <div class="fs-2 fw-bold text-danger">{{ summary.critical }}</div>
-        <a href="/ui/incidents?priority=1" class="stretched-link small text-muted">View critical →</a>
+        <a href="{{ request.script_root }}/ui/incidents?priority=1" class="stretched-link small text-muted">View critical →</a>
       </div>
     </div>
   </div>
@@ -65,7 +65,7 @@
     <div class="d-flex flex-wrap gap-3 align-items-center">
       <span class="text-muted small fw-semibold me-1">By State:</span>
       {% for state, count in summary.by_state.items() %}
-      <a href="/ui/incidents?state={{ state }}" class="text-decoration-none snow-state-pill snow-state-{{ state | replace(' ','') }}">
+      <a href="{{ request.script_root }}/ui/incidents?state={{ state }}" class="text-decoration-none snow-state-pill snow-state-{{ state | replace(' ','') }}">
         <span class="badge me-1 snow-state-{{ state | replace(' ','') }}">{{ count }}</span>
         <span class="text-dark small">{{ state }}</span>
       </a>
@@ -73,7 +73,7 @@
       <div class="vr d-none d-md-block"></div>
       <span class="text-muted small fw-semibold me-1">By Priority:</span>
       {% for p in [1,2,3,4,5] %}
-      <a href="/ui/incidents?priority={{ p }}" class="text-decoration-none">
+      <a href="{{ request.script_root }}/ui/incidents?priority={{ p }}" class="text-decoration-none">
         <span class="badge snow-pri-{{ p }} me-1">P{{ p }}</span>
         <span class="text-dark small">{{ summary.by_priority[p] }}</span>
       </a>
@@ -113,7 +113,7 @@
     <div class="card border-0 shadow-sm h-100">
       <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
         <span><i class="bi bi-journal-richtext me-1 text-success"></i>Knowledge Base</span>
-        <a href="/ui/kb" class="btn btn-sm btn-outline-success py-0">View All ({{ kb_count }})</a>
+        <a href="{{ request.script_root }}/ui/kb" class="btn btn-sm btn-outline-success py-0">View All ({{ kb_count }})</a>
       </div>
       <div class="card-body p-0">
         <ul class="list-group list-group-flush">
@@ -143,7 +143,7 @@
 <div class="card border-0 shadow-sm">
   <div class="card-header bg-transparent border-bottom fw-semibold d-flex justify-content-between align-items-center">
     <span><i class="bi bi-clock-history me-1 text-primary"></i>Latest Incidents</span>
-    <a href="/ui/incidents" class="btn btn-sm btn-primary">View All</a>
+    <a href="{{ request.script_root }}/ui/incidents" class="btn btn-sm btn-primary">View All</a>
   </div>
   <div class="table-responsive">
     <table class="table table-hover mb-0 align-middle">
@@ -160,14 +160,14 @@
       </thead>
       <tbody>
         {% for inc in summary.latest %}
-        <tr class="incident-row snow-pri-row-{{ inc.priority }}" style="cursor:pointer" data-href="/ui/incidents/{{ inc.number }}">
+        <tr class="snow-pri-row-{{ inc.priority }}">
           <td class="fw-semibold text-nowrap text-primary">{{ inc.number }}</td>
           <td><span class="badge snow-state-{{ inc.state | replace(' ','') }}">{{ inc.state }}</span></td>
           <td><span class="badge snow-pri-{{ inc.priority }}">P{{ inc.priority }}</span></td>
           <td class="text-nowrap small">{{ inc.assignment_group or '—' }}</td>
           <td class="text-truncate" style="max-width:280px">{{ inc.short_description }}</td>
           <td class="text-nowrap text-muted small">{{ inc.opened_at[:10] if inc.opened_at else '—' }}</td>
-          <td><a href="/ui/incidents/{{ inc.number }}" class="btn btn-xs btn-outline-secondary py-0 px-2">Detail</a></td>
+          <td><a href="{{ request.script_root }}/ui/incidents/{{ inc.number }}" class="btn btn-xs btn-outline-secondary py-0 px-2">Detail</a></td>
         </tr>
         {% endfor %}
       </tbody>
@@ -178,12 +178,6 @@
 
 {% block extra_js %}
 <script>
-document.querySelectorAll(".incident-row").forEach(row => {
-  row.addEventListener("click", e => {
-    if (!e.target.closest("a,button")) window.location = row.dataset.href;
-  });
-});
-// Bootstrap tooltips
 document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
   new bootstrap.Tooltip(el, { trigger: "hover" });
 });

@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 
 
 OPENAPI_SPEC = {
@@ -70,14 +70,20 @@ OPENAPI_SPEC = {
 def register_swagger(app):
     @app.get("/swagger.json")
     def swagger_json():
-        return jsonify(OPENAPI_SPEC)
+        spec = dict(OPENAPI_SPEC)
+        spec["servers"] = [{"url": request.script_root or "/"}]
+        return jsonify(spec)
 
     try:
         from flask_swagger_ui import get_swaggerui_blueprint
 
+        # flask_swagger_ui bakes this URL into its page at build time, so it
+        # can't see the per-request proxy prefix -- "../swagger.json" is
+        # relative to /swagger/ itself and resolves correctly whether the
+        # app is served at the root or behind a reverse-proxy prefix.
         swagger_ui = get_swaggerui_blueprint(
             "/swagger",
-            "/swagger.json",
+            "../swagger.json",
             config={"app_name": "Mock ServiceNow API Server"},
         )
         app.register_blueprint(swagger_ui, url_prefix="/swagger")
@@ -89,7 +95,7 @@ def register_swagger(app):
             return (
                 "<h1>Mock ServiceNow API Server</h1>"
                 "<p>Install flask-swagger-ui to enable interactive Swagger UI.</p>"
-                '<p><a href="/swagger.json">OpenAPI JSON</a></p>'
+                '<p><a href="../swagger.json">OpenAPI JSON</a></p>'
             )
 
         app.register_blueprint(fallback)
