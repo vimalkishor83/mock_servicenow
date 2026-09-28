@@ -77,16 +77,51 @@ def register_swagger(app):
     try:
         from flask_swagger_ui import get_swaggerui_blueprint
 
-        # flask_swagger_ui bakes this URL into its page at build time, so it
-        # can't see the per-request proxy prefix -- "../swagger.json" is
-        # relative to /swagger/ itself and resolves correctly whether the
-        # app is served at the root or behind a reverse-proxy prefix.
+        # flask_swagger_ui bakes base_url into its index page at *build* time
+        # (when this function runs), so it has no way to see the per-request
+        # reverse-proxy prefix -- everything it serves would 404 under one.
+        # Registering this route BEFORE the library's blueprint below makes
+        # Flask match it first for GET /swagger/, so it overrides just the
+        # index page with our own, request-aware version; the blueprint
+        # still serves its static JS/CSS/font assets correctly underneath.
+        @app.get("/swagger/")
+        def swagger_index():
+            prefix = request.script_root or ""
+            return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mock ServiceNow API Server</title>
+  <link rel="stylesheet" type="text/css" href="{prefix}/swagger/index.css">
+  <link rel="stylesheet" type="text/css" href="{prefix}/swagger/swagger-ui.css">
+  <link rel="icon" type="image/png" href="{prefix}/swagger/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="{prefix}/swagger/favicon-16x16.png" sizes="16x16" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="{prefix}/swagger/swagger-ui-bundle.js"></script>
+  <script src="{prefix}/swagger/swagger-ui-standalone-preset.js"></script>
+  <script>
+    var config = {{
+      presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+      plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+      dom_id: "#swagger-ui",
+      url: "{prefix}/swagger.json",
+      layout: "StandaloneLayout",
+      deepLinking: true
+    }};
+    window.onload = function () {{ window.ui = SwaggerUIBundle(config); }};
+  </script>
+</body>
+</html>"""
+
         swagger_ui = get_swaggerui_blueprint(
             "/swagger",
-            "../swagger.json",
+            "swagger.json",
             config={"app_name": "Mock ServiceNow API Server"},
         )
         app.register_blueprint(swagger_ui, url_prefix="/swagger")
+
     except ImportError:
         fallback = Blueprint("swagger_fallback", __name__)
 
